@@ -105,8 +105,8 @@ client.index index: 'myindex', type: 'foos', id: 9, body: { title: 'foo bar', bo
 client.index index: 'myindex', type: 'foos', id: 10, body: { title: 'foobar', body: "Test", val: 15  }
 client.index index: 'myindex', type: 'foos', id: 11, body: { title: 'foobar', body: "Test tests", val: 2  }
 client.index index: 'myindex', type: 'foos', id: 12, body: { title: 'foobar', body: "foo Tests foo test", val: 21  }
-client.index index: 'myindex', type: 'foos', id: 13, body: { title: 'foobar', body: "Tests foo test", val: 21  }
-client.index index: 'myindex', type: 'foos', id: 14, body: { title: 'foobar', body: "Tests foo bar test", val: 21  }
+client.index index: 'myindex', type: 'foos', id: 13, body: { title: 'afoobcbard', body: "Tests foo test", val: 21  }
+client.index index: 'myindex', type: 'foos', id: 14, body: { title: 'foobar', body: "Tests afoob cbard test", val: 21  }
 client.index index: 'myindex', type: 'foos', id: 15, body: { title: 'xxx', body: "afoo abar", val: 21  }
 
 
@@ -130,23 +130,29 @@ client.search(
         boost_mode: "sum", # Use + operation when boosting score
         functions: [
           {
-            filter: { # Add 100 to score of docs, that have val between 10 and 20.
+            filter: { # Add 100 millions to score of docs, that have val between 10 and 20.
                       # Can be used to raise score of outfits registered within last 4 months
               range: { val: { gte: 10, lte: 20 } }
             },
-            weight: 100,
+            weight: 100_000_000,
+          },
+          { # Add 1 million to score for matches using full words
+            filter: {
+              multi_match: { query: value, fields: ['title*', 'body'] }
+            },
+            weight: 1000_000,
           },
           {
-            filter: { # Add 20 to score for matches within title attributes
-              multi_match: { query: value, fields: [ 'title*'] }
+            filter: { # Add 10 000 to score for matches within title attributes
+              multi_match: { query: value, fields: [ 'title*', 'title*.trigram'] }
             },
-            weight: 20,
+            weight: 10_000,
           },
-          { # Add 10 to score for matches within body attributes
+          { # Add 100 to score for matches within body attributes
             filter: {
-              multi_match: { query: value, fields: [ 'body'] }
+              multi_match: { query: value, fields: [ 'body', 'body.trigram'] }
             },
-            weight: 10,
+            weight: 100,
           },
         ],
       }
