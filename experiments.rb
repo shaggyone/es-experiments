@@ -46,6 +46,22 @@ client.indices.create(
       }
     },
     mappings: {
+      bars: {
+        properties: {
+          title: {
+            type: "text",
+            analyzer: "english",
+            # index_options: "docs"
+
+            fields: {
+              trigram: {
+               type: "text",
+               analyzer: "trigram_english"
+              }
+            }
+          }
+        }
+      },
       foos: {
         properties: {
           title: {
@@ -110,6 +126,21 @@ client.index index: 'myindex', type: 'foos', id: 14, body: { title: 'foobar', bo
 client.index index: 'myindex', type: 'foos', id: 15, body: { title: 'xxx', body: "afoo abar", val: 21  }
 
 
+client.index index: 'myindex', type: 'bars', id: 1, body: { title: 'foo bar' }
+client.index index: 'myindex', type: 'bars', id: 2, body: { title: 'foo a bar' }
+client.index index: 'myindex', type: 'bars', id: 3, body: { title: 'foo a b bar' }
+client.index index: 'myindex', type: 'bars', id: 4, body: { title: 'foo a b c bar' }
+client.index index: 'myindex', type: 'bars', id: 5, body: { title: 'foo a b c d bar' }
+client.index index: 'myindex', type: 'bars', id: 6, body: { title: 'foo a b c d e bar' }
+client.index index: 'myindex', type: 'bars', id: 7, body: { title: 'foo a b c d e f bar' }
+client.index index: 'myindex', type: 'bars', id: 8, body: { title: 'foo a b c d e f g bar' }
+client.index index: 'myindex', type: 'bars', id: 9, body: { title: 'foo a b c d e f g h bar' }
+client.index index: 'myindex', type: 'bars', id: 10, body: { title: 'foo a b c d e f g h i bar' }
+client.index index: 'myindex', type: 'bars', id: 11, body: { title: 'foo a b c d e f g h i j bar' }
+client.index index: 'myindex', type: 'bars', id: 12, body: { title: 'foo a b c d e f g h i j' }
+client.index index: 'myindex', type: 'bars', id: 13, body: { title: 'a b c d e f g h i j bar' }
+
+
 binding.pry
 
 value = "foo bar"
@@ -121,9 +152,11 @@ client.search(
     query: {
       function_score: {
         query: { # This is basic query
-          multi_match: {
-            query: value,
-            fields: [ 'title*', 'body', 'title*.trigram', 'body*.trigram']
+          bool: {
+            must: [
+              { multi_match: { query: value, fields: [ 'title*', 'body', 'title*.trigram', 'body*.trigram'] } },
+              { type: { value: "foos" } },
+            ]
           }
         },
         score_mode: "sum", # Use + operation when calculating score
@@ -151,6 +184,59 @@ client.search(
           { # Add 100 to score for matches within body attributes
             filter: {
               multi_match: { query: value, fields: [ 'body', 'body.trigram'] }
+            },
+            weight: 100,
+          },
+          { # Add 100 to score for matches within body attributes
+            filter: {
+              multi_match: { query: value, fields: [ 'body', 'body.trigram'] }
+            },
+            weight: -100,
+          },
+        ],
+      }
+    }
+  }
+)
+
+
+value = "foo bar"
+client.search(
+  index: ['myindex'],
+  type: "bars",
+  body: {
+    from: 0,
+    size: 100,
+    query: {
+      function_score: {
+        query: { # This is basic query
+          multi_match: {
+            query: value,
+            fields: ['title', 'title.trigram'],
+            minimum_should_match: "30%", # If only 30% of query string matches, that's ok
+          },
+        },
+        score_mode: "sum", # Use + operation when calculating score
+        boost_mode: "sum", # Use + operation when boosting score
+        functions: [
+          { # Add 1 million to score for matches using full words
+            filter: {
+              multi_match: {
+                query: value,
+                fields: ['title'],
+                type: "phrase",
+                slop: 5 # Docs, with matchig words within 5 other words will appear higher
+              },
+            },
+            weight: 10,
+          },
+          { # Add 1 million to score for matches using full words
+            filter: {
+              multi_match: {
+                query: value,
+                fields: ['title', 'title.trigram'],
+                minimum_should_match: "100%", # Full matches are put to top
+              },
             },
             weight: 100,
           },
