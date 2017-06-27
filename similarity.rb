@@ -9,7 +9,15 @@ $client = Elasticsearch::Client.new(
   log: true,
 )
 
-# $client.transport.reload_connections!
+begin
+  $client.transport.reload_connections!
+rescue Faraday::ConnectionFailed => e
+  puts "Unable to connect to elasticsearch"
+  puts "you can start it using command:"
+  puts ""
+  puts "> docker-compose up"
+  exit 1
+end
 
 puts $client.cluster.health
 

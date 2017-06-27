@@ -1,0 +1,21 @@
+elasticsearch:
+  image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
+  ports:
+    - "9200:9200"
+    - "9300:9300"
+  environment:
+    transport.host: 127.0.0.1
+    http.host: 0.0.0.0
+    ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    # disable X-Pack
+    # see https://www.elastic.co/guide/en/x-pack/current/xpack-settings.html
+    #     https://www.elastic.co/guide/en/x-pack/current/installing-xpack.html#xpack-enabling
+    xpack.security.enabled: "false"
+    xpack.monitoring.enabled: "false"
+    xpack.graph.enabled: "false"
+    xpack.watcher.enabled: "false"
+# redis:
+#   image: redis
+#   ports:
+#     - "6379:6379"
+#
