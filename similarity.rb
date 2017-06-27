@@ -18,60 +18,20 @@ $client.indices.delete(index: "myindex") rescue puts("No index yet")
 $client.indices.create(
   index: 'myindex',
   body: {
-    settings: {
-      index: {
-        analysis: {
-          analyzer: {
-            split: {
-              type: "custom",
-              tokenizer: "standard",
-              filter: [
-                # "stemmer",
-                "lowercase",
-                # "trigrams_filter",
-              ]
-            }
-          },
-          # filter: {
-          #   split: {
-          #     # type: "split",
-          #   },
-          # }
-        }
-      }
-    },
     mappings: {
       outfits: {
         properties: {
           title: {
             type: "text",
-            # analyzer: "english",
-            # fields: {
-            #   trigram: {
-            #     type: "text",
-            #     analyzer: "trigram_english",
-            #   }
-            # }
+            analyzer: "english",
           },
           body: {
             type: "text",
-            # analyzer: "english",
-            # fields: {
-            #   trigram: {
-            #     type: "text",
-            #     analyzer: "trigram_english",
-            #   }
-            # }
+            analyzer: "english",
           },
-          products_names: {
+          products_uris: {
             type: "text",
-            # analyzer: "english",
-            # fields: {
-            #   trigram: {
-            #     type: "text",
-            #     analyzer: "trigram_english",
-            #   }
-            # }
+            analyzer: "standard", # <- должен
           }
         }
       }
@@ -82,45 +42,45 @@ $client.indices.create(
 $client.index index: 'myindex', type: 'outfits', id: 1, body: {
   title: (("a".."l").to_a - ["d"]).join(" "),
   body: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
-  products_names: ("l".."q").to_a.join(" "),
+  products_uris: ("l".."q").to_a.join(" "),
 }
 
 $client.index index: 'myindex', type: 'outfits', id: 2, body: {
   title: (("a".."l").to_a - ["d"]).join(" "),
   body: ("l".."q").to_a.join(" "),
-  products_names: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
+  products_uris: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
 }
 
 $client.index index: 'myindex', type: 'outfits', id: 3, body: {
   title: ("l".."q").to_a,
   body: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
-  products_names: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
+  products_uris: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
 
 }
 
 $client.index index: 'myindex', type: 'outfits', id: 4, body: {
   title: (("a".."l").to_a - ["d", "e", "f"]).join(" "),
   body: (("a".."l").to_a - ["a", "b", "c"]).join(" "),
-  products_names: ("l".."q").to_a.join(" "),
+  products_uris: ("l".."q").to_a.join(" "),
 }
 
 $client.index index: 'myindex', type: 'outfits', id: 5, body: {
   title: (("a".."l").to_a - ["d", "e", "f"]).join(" "),
   body: ("l".."q").to_a.join(" "),
-  products_names: (("a".."l").to_a - ["a", "b", "c", "d", "e"]).join(" "),
+  products_uris: (("a".."l").to_a - ["a", "b", "c", "d", "e"]).join(" "),
 }
 
 $client.index index: 'myindex', type: 'outfits', id: 6, body: {
   title: ("l".."q").to_a,
   body: (("a".."l").to_a - ["a", "b", "c", "d"]).join(" "),
-  products_names: (("a".."l").to_a - ["a", "b", "c", "d", "e"]).join(" "),
+  products_uris: (("a".."l").to_a - ["a", "b", "c", "d", "e"]).join(" "),
 }
 
 
 
 title = ("a".."l").to_a.join(" ")
 body =  ("a".."l").to_a.join(" ")
-products_names =  ("a".."l").to_a.join(" ")
+products_uris =  ("a".."l").to_a.join(" ")
 
 binding.pry
 
@@ -149,8 +109,8 @@ $client.search(
           },
           {
             multi_match: {
-              query: products_names,
-              fields: "products_names",
+              query: products_uris,
+              fields: "products_uris",
               minimum_should_match: "75%",
             }
           },
@@ -185,8 +145,8 @@ $client.search(
     # },
     query: {
       multi_match: {
-        query: products_names,
-        fields: "products_names",
+        query: products_uris,
+        fields: "products_uris",
         minimum_should_match: "75%",
       }
     },
