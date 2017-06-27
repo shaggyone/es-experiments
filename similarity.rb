@@ -39,7 +39,7 @@ $client.indices.create(
           },
           products_uris: {
             type: "text",
-            analyzer: "standard", # <- должен
+            analyzer: "whitespace", # <- разбиение по пробелам
           }
         }
       }
